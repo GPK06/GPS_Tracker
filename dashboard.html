@@ -13,14 +13,14 @@
     </style>
 </head>
 <body>
-    <div id="alert-box">⚠️ ALERT: USER DISCONNECTED!</div>
+    <div id="alert-box">ALERT: USER DISCONNECTED!</div>
 
     <h1>Admin Dashboard</h1>
     
     <div class="card">
         <h3>Tracking: user_123</h3>
         <p>Status: <span id="statusText">Checking...</span></p>
-        <p>Last Seen: <span id="lastSeen">0</span> seconds ago</p>
+        <p>Last Seen: <span id="lastSeen">0</span> seconds ago...</p>
         <p>Coordinates: <span id="coords">waiting...</span></p>
     </div>
 
@@ -39,29 +39,29 @@
             .then(data => {
                 
                 // Update UI
-                lastSeen.innerText = data.last_seen_seconds_ago || "N/A";
+                lastSeen.innerText = data.last_seen_seconds_ago || "Not available";
                 coords.innerText = `${data.latitude}, ${data.longitude}`;
 
                 if (data.status === 'connected') {
-                    statusText.innerHTML = '<span class="online">● Online</span>';
+                    statusText.innerHTML = '<span class="online">Online</span>';
                     statusText.className = "online";
                     alertBox.style.display = "none";
                     disconnectedAlertShown = false; // Reset alert flag
                 } else {
                     statusText.innerHTML = '<span class="offline">● Offline</span>';
                     
-                    // Trigger Alert Logic
+                    // Condition to throw alert
                     if (!disconnectedAlertShown) {
                         alertBox.style.display = "block";
                         alert(`User ${USER_ID} has disconnected!`);
-                        disconnectedAlertShown = true; // Don't spam alerts
+                        disconnectedAlertShown = true;
                     }
                 }
             })
             .catch(err => console.error("Polling error:", err));
         }
 
-        // Poll the server every 2 seconds
+        // Fetch interval -> every 2 seconds
         setInterval(checkStatus, 2000);
     </script>
 </body>
