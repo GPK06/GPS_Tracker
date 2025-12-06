@@ -6,7 +6,7 @@ from flask import Flask, request, jsonify, render_template, g
 app = Flask(__name__)
 DB_NAME = "gps_data.db"
 
-# Config: How many seconds to wait before declaring "Disconnected"
+# Disconnect threshold value (in seconds)
 TIMEOUT_THRESHOLD = 10 
 
 def get_db():
@@ -25,7 +25,7 @@ def init_db():
     with app.app_context():
         db = get_db()
         cursor = db.cursor()
-        # Create table to store history
+        # Table to log history
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS locations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -36,32 +36,35 @@ def init_db():
             )
         ''')
         db.commit()
-
-# --- ROUTES ---
-
+        
 @app.route('/')
+# Home page
 def index():
-    return "<h2>Go to /tracker to send GPS, or /dashboard to monitor.</h2>"
+    return "<h2>Welcome. [/tracker for client, /dashboard for admin]</h2>"
 
+# Client page
 @app.route('/tracker')
-def tracker_view():
+def tracker():
     return render_template('tracker.html')
 
+# Admin page
 @app.route('/dashboard')
-def dashboard_view():
+def dashboard():
     return render_template('dashboard.html')
 
-# API to receive GPS data
+# Recieve GPS Data from API
 @app.route('/api/update_location', methods=['POST'])
 def update_location():
     data = request.json
     user_id = data.get('user_id')
     lat = data.get('latitude')
     lon = data.get('longitude')
-    
+
+    # To throw error if data is improper
     if not user_id or not lat or not lon:
         return jsonify({"status": "error", "message": "Missing data"}), 400
 
+    # Commit data to database
     db = get_db()
     cursor = db.cursor()
     cursor.execute("INSERT INTO locations (user_id, latitude, longitude) VALUES (?, ?, ?)", 
@@ -70,16 +73,17 @@ def update_location():
     
     return jsonify({"status": "success"}), 200
 
-# API to check status (Heartbeat monitor)
+# Status check
 @app.route('/api/get_status/<user_id>')
 def get_status(user_id):
     db = get_db()
     cursor = db.cursor()
     
-    # Get the very last entry for this user
+    # Get the last entry for this user
     cursor.execute("SELECT timestamp, latitude, longitude FROM locations WHERE user_id = ? ORDER BY id DESC LIMIT 1", (user_id,))
     row = cursor.fetchone()
-    
+
+    # Disconnect status
     if not row:
         return jsonify({"status": "offline", "message": "No data found"})
 
@@ -87,11 +91,9 @@ def get_status(user_id):
     latitude = row[1]
     longitude = row[2]
 
-    # Calculate time difference
-    # SQLite stores time as UTC string usually, we convert to object
+    # Calculate time difference (in UTC - SQLite format)
     last_active = datetime.strptime(last_time_str, '%Y-%m-%d %H:%M:%S')
     now = datetime.utcnow()
-    
     time_diff = (now - last_active).total_seconds()
     
     is_connected = time_diff < TIMEOUT_THRESHOLD
@@ -106,5 +108,4 @@ def get_status(user_id):
 
 if __name__ == '__main__':
     init_db()
-    # Host='0.0.0.0' allows access from other devices on the same WiFi
     app.run(debug=True, host='0.0.0.0', port=5000)
