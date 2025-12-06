@@ -12,15 +12,15 @@
     </style>
 </head>
 <body>
-    <h1>Your Location is being tracked</h1>
-    <p>User ID: <strong id="userId">user_123</strong></p>
+    <h1>TRACKING LOCATION</h1>
+    <p>User ID: <strong id="userId">user1</strong></p>
     
     <div class="status" id="statusBox">
-        Waiting for GPS permissions...
+        Waiting...
     </div>
 
     <script>
-        const USER_ID = "user_123"; // Hardcoded for this demo
+        const USER_ID = "user1"; // Test (needs login update)
         const statusBox = document.getElementById('statusBox');
 
         function sendLocation(lat, lon) {
@@ -38,26 +38,25 @@
                 statusBox.innerHTML = `<span class="sending">Sent: ${lat.toFixed(4)}, ${lon.toFixed(4)}</span> <br> Time: ${new Date().toLocaleTimeString()}`;
             })
             .catch(err => {
-                statusBox.innerHTML = `<span class="error">Server Error: ${err}</span>`;
+                statusBox.innerHTML = `<span class="error"> Error: ${err}</span>`;
             });
         }
 
         function startTracking() {
             if (navigator.geolocation) {
-                // WatchPosition updates whenever location changes
-                // Alternatively use setInterval with getCurrentPosition
+                // Updates whenever location changes
                 setInterval(() => {
                     navigator.geolocation.getCurrentPosition(
                         (position) => {
                             sendLocation(position.coords.latitude, position.coords.longitude);
                         }, 
                         (error) => {
-                            statusBox.innerHTML = `<span class="error">GPS Error: ${error.message}</span>`;
+                            statusBox.innerHTML = `<span class="error"> Error: ${error.message}</span>`; // Debug
                         }
                     );
                 }, 3000); // Send every 3 seconds
             } else {
-                statusBox.innerHTML = "Geolocation is not supported by this browser.";
+                statusBox.innerHTML = "No GPS support"; // Condition to get validity for tracking
             }
         }
 
