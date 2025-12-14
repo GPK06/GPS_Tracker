@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 500px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">📝 Shift Details</div>
+        <p class="text-muted">Please enter your current assignment details. These will be saved for future logins until reset by a supervisor.</p>
+        
+        <form method="POST">
+            <label>Full Name</label>
+            <input type="text" name="full_name" placeholder="e.g. John Doe" required>
+            
+            <label>Contact Phone</label>
+            <input type="text" name="phone" placeholder="e.g. +1 555-0199" required>
+            
+            <label>Duty Description</label>
+            <textarea name="duty" rows="3" maxlength="100" placeholder="e.g. Patrolling North Sector" required></textarea>
+            
+            <button type="submit" style="background-color: #28a745;">Start Duty</button>
+        </form>
+    </div>
+</div>
+{% endblock %}

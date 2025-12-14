@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div style="max-width: 400px; margin: 0 auto;">
+    <div class="card">
+        <div class="card-header">Create Account</div>
+        <form method="POST">
+            <label>Username</label>
+            <input type="text" name="username" required>
+            
+            <label>Password</label>
+            <input type="password" name="password" required>
+            
+            <label>Role</label>
+            <select name="role">
+                <option value="tracker">Field Tracker</option>
+                <option value="supervisor">Supervisor</option>
+            </select>
+            
+            <button type="submit">Register Account</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
