@@ -1,66 +1,53 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>GPS Sender</title>
-    <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        .status { padding: 20px; background: #e0e0e0; margin-top: 20px; border-radius: 8px;}
-        .sending { color: green; font-weight: bold; }
-        .error { color: red; }
-    </style>
-</head>
-<body>
-    <h1>TRACKING LOCATION</h1>
-    <p>User ID: <strong id="userId">user1</strong></p>
-    
-    <div class="status" id="statusBox">
-        Waiting...
+{% extends "base.html" %}
+{% block content %}
+<div style="text-align: center;">
+    <div class="card">
+        <div class="card-header">📡 Live Tracker Active</div>
+        
+        <div style="font-size: 1.2rem; margin-bottom: 20px;">
+            Status: <span id="status" style="font-weight:bold; color:orange">Initializing GPS...</span>
+        </div>
+        
+        <div style="background:#eef; padding:15px; border-radius:5px; display:inline-block; text-align:left;">
+            <strong>Instructions:</strong><br>
+            1. Keep this tab open.<br>
+            2. Do not let your screen sleep if possible.<br>
+            3. Ensure Location Services are ON.
+        </div>
     </div>
+</div>
 
-    <script>
-        const USER_ID = "user1"; // Test (needs login update)
-        const statusBox = document.getElementById('statusBox');
-
-        function sendLocation(lat, lon) {
-            fetch('/api/update_location', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    user_id: USER_ID,
-                    latitude: lat,
-                    longitude: lon
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                statusBox.innerHTML = `<span class="sending">Sent: ${lat.toFixed(4)}, ${lon.toFixed(4)}</span> <br> Time: ${new Date().toLocaleTimeString()}`;
-            })
-            .catch(err => {
-                statusBox.innerHTML = `<span class="error"> Error: ${err}</span>`;
-            });
-        }
-
-        function startTracking() {
-            if (navigator.geolocation) {
-                // Updates whenever location changes
-                setInterval(() => {
-                    navigator.geolocation.getCurrentPosition(
-                        (position) => {
-                            sendLocation(position.coords.latitude, position.coords.longitude);
-                        }, 
-                        (error) => {
-                            statusBox.innerHTML = `<span class="error"> Error: ${error.message}</span>`; // Debug
-                        }
-                    );
-                }, 3000); // Send every 3 seconds
+<script>
+    function sendLocation(lat, lon) {
+        fetch('/api/update_location', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ latitude: lat, longitude: lon })
+        })
+        .then(res => {
+            if(res.ok) {
+                const now = new Date().toLocaleTimeString();
+                document.getElementById('status').innerHTML = 
+                    `<span style='color:green'>● Transmitting</span><br><br>Last Sent: ${now}<br>Lat: ${lat.toFixed(5)} | Lon: ${lon.toFixed(5)}`;
             } else {
-                statusBox.innerHTML = "No GPS support"; // Condition to get validity for tracking
+                document.getElementById('status').innerText = "Server Error (Check Connection)";
+                document.getElementById('status').style.color = "red";
             }
-        }
+        })
+        .catch(err => console.error(err));
+    }
 
-        startTracking();
-    </script>
-</body>
-</html>
+    if (navigator.geolocation) {
+        navigator.geolocation.watchPosition(
+            (pos) => sendLocation(pos.coords.latitude, pos.coords.longitude),
+            (err) => {
+                document.getElementById('status').innerText = "GPS Error: " + err.message;
+                document.getElementById('status').style.color = "red";
+            },
+            { enableHighAccuracy: true, maximumAge: 0 }
+        );
+    } else {
+        alert("Geolocation is not supported by this browser.");
+    }
+</script>
+{% endblock %}
